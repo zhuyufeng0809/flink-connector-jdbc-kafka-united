@@ -14,9 +14,21 @@ public class MySqlSplit implements SourceSplit {
         this.upperBound = upperBound;
     }
 
+    public ColumnMeta getColumnMeta() {
+        return columnMeta;
+    }
+
+    public Long getLowerBound() {
+        return lowerBound;
+    }
+
+    public Long getUpperBound() {
+        return upperBound;
+    }
+
     @Override
     public String splitId() {
-        return null;
+        return toString();
     }
 
     @Override

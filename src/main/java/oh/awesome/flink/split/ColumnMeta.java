@@ -3,9 +3,9 @@ package oh.awesome.flink.split;
 import java.io.Serializable;
 
 public class ColumnMeta implements Serializable {
-    String schemaName;
-    String tableName;
-    String columnName;
+    private final String schemaName;
+    private final String tableName;
+    private final String columnName;
 
     public ColumnMeta(String schemaName, String tableName, String columnName) {
         this.schemaName = schemaName;

@@ -1,5 +1,6 @@
 package oh.awesome.flink;
 
+import oh.awesome.flink.split.MySqlSplitSerializer;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.connector.source.Boundedness;
 import org.apache.flink.api.connector.source.Source;
@@ -41,7 +42,7 @@ public class MysqlSource implements Source<RowData, MySqlSplit, MysqlSplitEnumer
 
     @Override
     public SimpleVersionedSerializer<MySqlSplit> getSplitSerializer() {
-        return null;
+        return new MySqlSplitSerializer();
     }
 
     @Override
