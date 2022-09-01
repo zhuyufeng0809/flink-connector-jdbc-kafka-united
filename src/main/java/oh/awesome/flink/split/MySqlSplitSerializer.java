@@ -14,7 +14,7 @@ public class MySqlSplitSerializer implements SimpleVersionedSerializer<MySqlSpli
 
     public MySqlSplitSerializer() {
         this.kryo = new Kryo();
-        kryo.register(MySqlSplit.class, new InternalKryoSerializer());
+        kryo.register(MySqlSplit.class, new InternalMySqlSplitKryoSerializer());
     }
 
     @Override
@@ -36,14 +36,15 @@ public class MySqlSplitSerializer implements SimpleVersionedSerializer<MySqlSpli
         return kryo.readObject(new Input(serialized), MySqlSplit.class);
     }
 
-    static class InternalKryoSerializer extends Serializer<MySqlSplit> {
+    public static class InternalMySqlSplitKryoSerializer extends Serializer<MySqlSplit> {
 
         @Override
         public void write(Kryo kryo, Output output, MySqlSplit object) {
             ColumnMeta columnMeta = object.getColumnMeta();
+            Range range = object.getRange();
 
-            output.writeLong(object.getLowerBound());
-            output.writeLong(object.getUpperBound());
+            output.writeLong(range.getLowerBound());
+            output.writeLong(range.getUpperBound());
             output.writeString(columnMeta.getSchemaName());
             output.writeString(columnMeta.getTableName());
             output.writeString(columnMeta.getColumnName());
@@ -57,7 +58,9 @@ public class MySqlSplitSerializer implements SimpleVersionedSerializer<MySqlSpli
             String table = input.readString();
             String column = input.readString();
 
-            return new MySqlSplit(new ColumnMeta(schema, table, column), lowerBound, upperBound);
+            return new MySqlSplit(
+                    new ColumnMeta(schema, table, column),
+                    new Range(lowerBound, upperBound));
         }
     }
 }

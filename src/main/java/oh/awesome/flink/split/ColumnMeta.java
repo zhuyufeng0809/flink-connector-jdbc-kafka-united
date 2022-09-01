@@ -26,6 +26,23 @@ public class ColumnMeta implements Serializable {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        ColumnMeta that = (ColumnMeta) o;
+        return com.google.common.base.Objects.equal(schemaName, that.schemaName) && com.google.common.base.Objects.equal(tableName, that.tableName) && com.google.common.base.Objects.equal(columnName, that.columnName);
+    }
+
+    @Override
+    public int hashCode() {
+        return com.google.common.base.Objects.hashCode(schemaName, tableName, columnName);
+    }
+
+    @Override
     public String toString() {
         return String.join(".", schemaName, tableName, columnName);
     }

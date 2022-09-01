@@ -2,28 +2,24 @@ package oh.awesome.flink.split;
 
 import org.apache.flink.api.connector.source.SourceSplit;
 
+import com.google.common.base.Objects;
+
 public class MySqlSplit implements SourceSplit {
 
     private final ColumnMeta columnMeta;
-    private final Long lowerBound;
-    private final Long upperBound;
+    private final Range range;
 
-    public MySqlSplit(ColumnMeta columnMeta, Long lowerBound, Long upperBound) {
+    public MySqlSplit(ColumnMeta columnMeta, Range range) {
         this.columnMeta = columnMeta;
-        this.lowerBound = lowerBound;
-        this.upperBound = upperBound;
+        this.range = range;
     }
 
     public ColumnMeta getColumnMeta() {
         return columnMeta;
     }
 
-    public Long getLowerBound() {
-        return lowerBound;
-    }
-
-    public Long getUpperBound() {
-        return upperBound;
+    public Range getRange() {
+        return range;
     }
 
     @Override
@@ -32,8 +28,24 @@ public class MySqlSplit implements SourceSplit {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        MySqlSplit that = (MySqlSplit) o;
+        return Objects.equal(columnMeta, that.columnMeta) && Objects.equal(range, that.range);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(columnMeta, range);
+    }
+
+    @Override
     public String toString() {
-        String range = String.join("-", lowerBound.toString(), upperBound.toString());
-        return String.join(":", columnMeta.toString(), range);
+        return String.join(":", columnMeta.toString(), range.toString());
     }
 }
