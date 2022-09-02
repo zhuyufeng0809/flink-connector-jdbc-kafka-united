@@ -1,19 +1,12 @@
 package oh.awesome.flink.dialect;
 
 public class MySQLDialect {
-    public static String getMaxValueStatement(String schema, String table, String column) {
-        return getBestValueStatement("MAX", schema, table, column);
-    }
-
-    public static String getMinValueStatement(String schema, String table, String column) {
-        return getBestValueStatement("MIN", schema, table, column);
-    }
-
-    private static String getBestValueStatement(String function, String schema, String table, String column) {
-        final String sql = "SELECT %s(%s) FROM %s.%s";
+    public static String getBestValueStatement(String schema, String table, String column) {
+        String quotedColumn = quoteIdentifier(column);
+        final String sql = "SELECT MIN(%s), MAX(%s) FROM %s.%s";
         return String.format(sql,
-                function,
-                quoteIdentifier(column),
+                quotedColumn,
+                quotedColumn,
                 quoteIdentifier(schema),
                 quoteIdentifier(table));
     }

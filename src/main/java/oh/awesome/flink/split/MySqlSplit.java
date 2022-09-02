@@ -8,10 +8,12 @@ public class MySqlSplit implements SourceSplit {
 
     private final ColumnMeta columnMeta;
     private final Range range;
+    private final Integer id;
 
-    public MySqlSplit(ColumnMeta columnMeta, Range range) {
+    public MySqlSplit(ColumnMeta columnMeta, Range range, Integer id) {
         this.columnMeta = columnMeta;
         this.range = range;
+        this.id = id;
     }
 
     public ColumnMeta getColumnMeta() {
@@ -22,9 +24,13 @@ public class MySqlSplit implements SourceSplit {
         return range;
     }
 
+    public Integer getId() {
+        return id;
+    }
+
     @Override
     public String splitId() {
-        return toString();
+        return getId().toString();
     }
 
     @Override
@@ -36,12 +42,12 @@ public class MySqlSplit implements SourceSplit {
             return false;
         }
         MySqlSplit that = (MySqlSplit) o;
-        return Objects.equal(columnMeta, that.columnMeta) && Objects.equal(range, that.range);
+        return Objects.equal(columnMeta, that.columnMeta) && Objects.equal(range, that.range) && Objects.equal(id, that.id);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(columnMeta, range);
+        return Objects.hashCode(columnMeta, range, id);
     }
 
     @Override

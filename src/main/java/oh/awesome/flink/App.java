@@ -10,6 +10,7 @@ public class App {
                 .username("")
                 .password("")
                 .splitColumn("")
+                .splitNum(64)
                 .build();
     }
 }

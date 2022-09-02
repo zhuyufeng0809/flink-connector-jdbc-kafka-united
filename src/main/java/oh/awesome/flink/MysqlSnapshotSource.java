@@ -1,6 +1,7 @@
 package oh.awesome.flink;
 
-import oh.awesome.flink.config.DBConfig;
+import oh.awesome.flink.config.ConfigOptions;
+import oh.awesome.flink.enumerator.MySqlSplitEnumerator;
 import oh.awesome.flink.enumerator.MysqlSplitEnumeratorStateSerializer;
 import oh.awesome.flink.split.MySqlSplitSerializer;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
@@ -17,13 +18,15 @@ import org.apache.flink.table.data.RowData;
 import oh.awesome.flink.enumerator.MysqlSplitEnumeratorState;
 import oh.awesome.flink.split.MySqlSplit;
 
+import java.util.Properties;
+
 /**
  * only for snapshot reading in hybrid source
  */
 public class MysqlSnapshotSource implements Source<RowData, MySqlSplit, MysqlSplitEnumeratorState>, ResultTypeQueryable<RowData> {
-    private final DBConfig config;
+    private final Properties config;
 
-    private MysqlSnapshotSource(DBConfig config) {
+    private MysqlSnapshotSource(Properties config) {
         this.config = config;
     }
 
@@ -39,7 +42,9 @@ public class MysqlSnapshotSource implements Source<RowData, MySqlSplit, MysqlSpl
 
     @Override
     public SplitEnumerator<MySqlSplit, MysqlSplitEnumeratorState> createEnumerator(SplitEnumeratorContext<MySqlSplit> enumContext) throws Exception {
-        return null;
+        Properties properties = new Properties();
+        properties.putAll(config);
+        return new MySqlSplitEnumerator(enumContext, properties);
     }
 
     @Override
@@ -67,59 +72,54 @@ public class MysqlSnapshotSource implements Source<RowData, MySqlSplit, MysqlSpl
     }
 
     public static class MysqlSnapshotSourceBuilder {
-        private String host;
-        private Integer port;
-        private String username;
-        private String password;
-        private String schema;
-        private String table;
-        private String splitColumn;
+        private final Properties properties;
+
+        public MysqlSnapshotSourceBuilder() {
+            this.properties = new Properties();
+        }
 
         public MysqlSnapshotSourceBuilder host(String host) {
-            this.host = host;
+            properties.setProperty(ConfigOptions.HOST, host);
             return this;
         }
 
         public MysqlSnapshotSourceBuilder port(Integer port) {
-            this.port = port;
+            properties.setProperty(ConfigOptions.PORT, port.toString());
             return this;
         }
 
         public MysqlSnapshotSourceBuilder username(String username) {
-            this.username = username;
+            properties.setProperty(ConfigOptions.USERNAME, username);
             return this;
         }
 
         public MysqlSnapshotSourceBuilder password(String password) {
-            this.password = password;
+            properties.setProperty(ConfigOptions.PASSWORD, password);
             return this;
         }
 
         public MysqlSnapshotSourceBuilder schema(String schema) {
-            this.schema = schema;
+            properties.setProperty(ConfigOptions.SCHEMA, schema);
             return this;
         }
 
         public MysqlSnapshotSourceBuilder table(String table) {
-            this.table = table;
+            properties.setProperty(ConfigOptions.TABLE, table);
             return this;
         }
 
         public MysqlSnapshotSourceBuilder splitColumn(String splitColumn) {
-            this.splitColumn = splitColumn;
+            properties.setProperty(ConfigOptions.SPLIT_COLUMN, splitColumn);
+            return this;
+        }
+
+        public MysqlSnapshotSourceBuilder splitNum(Integer splitNum) {
+            properties.setProperty(ConfigOptions.SPLIT_NUM, splitNum.toString());
             return this;
         }
 
         public MysqlSnapshotSource build() {
-            DBConfig config = new DBConfig(
-                    host,
-                    port,
-                    username,
-                    password,
-                    schema,
-                    table,
-                    splitColumn);
-            return new MysqlSnapshotSource(config);
+            return new MysqlSnapshotSource(properties);
         }
     }
 }

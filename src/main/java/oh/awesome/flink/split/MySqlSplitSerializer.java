@@ -43,6 +43,7 @@ public class MySqlSplitSerializer implements SimpleVersionedSerializer<MySqlSpli
             ColumnMeta columnMeta = object.getColumnMeta();
             Range range = object.getRange();
 
+            output.writeInt(object.getId());
             output.writeLong(range.getLowerBound());
             output.writeLong(range.getUpperBound());
             output.writeString(columnMeta.getSchemaName());
@@ -52,6 +53,7 @@ public class MySqlSplitSerializer implements SimpleVersionedSerializer<MySqlSpli
 
         @Override
         public MySqlSplit read(Kryo kryo, Input input, Class<MySqlSplit> type) {
+            Integer id = input.readInt();
             Long lowerBound = input.readLong();
             Long upperBound = input.readLong();
             String schema = input.readString();
@@ -60,7 +62,8 @@ public class MySqlSplitSerializer implements SimpleVersionedSerializer<MySqlSpli
 
             return new MySqlSplit(
                     new ColumnMeta(schema, table, column),
-                    new Range(lowerBound, upperBound));
+                    new Range(lowerBound, upperBound),
+                    id);
         }
     }
 }
