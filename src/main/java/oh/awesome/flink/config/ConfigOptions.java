@@ -10,4 +10,5 @@ public class ConfigOptions {
     public static final String SPLIT_COLUMN = "split-column";
     public static final String SPLIT_NUM = "split-num";
     public static final String SOURCE_READER_QUEUE_CAPACITY = "100";
+    public static final String SPLIT_FETCHER_NUM = "8";
 }

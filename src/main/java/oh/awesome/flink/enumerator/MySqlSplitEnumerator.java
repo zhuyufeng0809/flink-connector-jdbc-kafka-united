@@ -111,7 +111,7 @@ public class MySqlSplitEnumerator implements SplitEnumerator<MySqlSplit, MysqlSp
         Statement statement = connection.createStatement();
 
         ResultSet resultSet = statement.executeQuery(
-                MySQLDialect.getBestValueStatement(
+                MySQLDialect.getSelectBestValueStatement(
                 config.getProperty(ConfigOptions.SCHEMA),
                 config.getProperty(ConfigOptions.TABLE),
                 config.getProperty(ConfigOptions.SPLIT_COLUMN))

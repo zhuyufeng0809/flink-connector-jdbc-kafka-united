@@ -25,9 +25,11 @@ import java.util.Properties;
  */
 public class MysqlSnapshotSource implements Source<RowData, MySqlSplit, MysqlSplitEnumeratorState>, ResultTypeQueryable<RowData> {
     private final Properties config;
+    private final String[] fieldNames;
 
-    private MysqlSnapshotSource(Properties config) {
+    private MysqlSnapshotSource(Properties config, String[] fieldNames) {
         this.config = config;
+        this.fieldNames = fieldNames;
     }
 
     @Override
@@ -73,6 +75,7 @@ public class MysqlSnapshotSource implements Source<RowData, MySqlSplit, MysqlSpl
 
     public static class MysqlSnapshotSourceBuilder {
         private final Properties properties;
+        private String[] fieldNames;
 
         public MysqlSnapshotSourceBuilder() {
             this.properties = new Properties();
@@ -118,8 +121,16 @@ public class MysqlSnapshotSource implements Source<RowData, MySqlSplit, MysqlSpl
             return this;
         }
 
+        public MysqlSnapshotSourceBuilder project(String[] fieldNames) {
+            this.fieldNames = fieldNames;
+            return this;
+        }
+
         public MysqlSnapshotSource build() {
-            return new MysqlSnapshotSource(properties);
+            if (fieldNames == null) {
+                fieldNames = new String[]{"*"};
+            }
+            return new MysqlSnapshotSource(properties, fieldNames);
         }
     }
 }

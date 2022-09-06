@@ -8,8 +8,17 @@ import org.apache.flink.table.data.RowData;
 import oh.awesome.flink.split.MySqlSplit;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MysqlSplitReader implements SplitReader<RowData, MySqlSplit> {
+    private List<MySqlSplit> unreadSplits;
+    private List<MySqlSplit> readSplits;
+
+    public MysqlSplitReader() {
+        this.unreadSplits = new ArrayList<>();
+        this.readSplits = new ArrayList<>();
+    }
 
     @Override
     public RecordsWithSplitIds<RowData> fetch() throws IOException {
@@ -18,7 +27,7 @@ public class MysqlSplitReader implements SplitReader<RowData, MySqlSplit> {
 
     @Override
     public void handleSplitsChanges(SplitsChange<MySqlSplit> splitsChanges) {
-
+        unreadSplits.addAll(splitsChanges.splits());
     }
 
     @Override
