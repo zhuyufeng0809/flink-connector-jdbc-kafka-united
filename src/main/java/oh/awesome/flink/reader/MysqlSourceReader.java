@@ -14,9 +14,12 @@ import oh.awesome.flink.split.MySqlSplitState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.Connection;
 import java.util.Map;
 
 public class MysqlSourceReader extends SourceReaderBase<RowData, RowData, MySqlSplit, MySqlSplitState> {
+
+    private final Connection connection;
 
     private static final Logger LOG = LoggerFactory.getLogger(MysqlSourceReader.class);
 
@@ -24,8 +27,10 @@ public class MysqlSourceReader extends SourceReaderBase<RowData, RowData, MySqlS
                              SplitFetcherManager<RowData, MySqlSplit> splitFetcherManager,
                              RecordEmitter<RowData, RowData, MySqlSplitState> recordEmitter,
                              Configuration config,
-                             SourceReaderContext context) {
+                             SourceReaderContext context,
+                             Connection connection) {
         super(elementsQueue, splitFetcherManager, recordEmitter, config, context);
+        this.connection = connection;
     }
 
     @Override
@@ -41,5 +46,11 @@ public class MysqlSourceReader extends SourceReaderBase<RowData, RowData, MySqlS
     @Override
     protected MySqlSplit toSplitType(String splitId, MySqlSplitState splitState) {
         return splitState.toMySqlSplit();
+    }
+
+    @Override
+    public void close() throws Exception {
+        super.close();
+        connection.close();
     }
 }

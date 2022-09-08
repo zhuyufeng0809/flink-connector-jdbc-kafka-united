@@ -18,12 +18,20 @@ public class MySQLDialect {
                 quoteIdentifier(table));
     }
 
+    public static String getSelectFromBetweenStatement(String schema,
+                                                       String table,
+                                                       String[] selectFields,
+                                                       String splitColumn,
+                                                       Range range) {
+        final String sql = " WHERE %s BETWEEN %s AND %s";
+        String between = String.format(sql, quoteIdentifier(splitColumn), range.getLowerBound(), range.getLowerBound());
+        return String.join("", getSelectFromStatement(schema, table, selectFields), between);
+    }
+
     public static String getSelectFromStatement(String schema,
-                                                String table,
-                                                String[] selectFields,
-                                                String splitColumn,
-                                                Range range) {
-        final String sql = "SELECT %s FROM %s.%s WHERE %s BETWEEN %s AND %s";
+                                                       String table,
+                                                       String[] selectFields) {
+        final String sql = "SELECT %s FROM %s.%s";
         String selectExpressions =
                 Arrays.stream(selectFields)
                         .map(MySQLDialect::quoteIdentifier)
@@ -31,10 +39,7 @@ public class MySQLDialect {
         return String.format(sql,
                 selectExpressions,
                 quoteIdentifier(schema),
-                quoteIdentifier(table),
-                quoteIdentifier(splitColumn),
-                range.getLowerBound().toString(),
-                range.getUpperBound().toString());
+                quoteIdentifier(table));
     }
 
     private static String quoteIdentifier(String anyKeyword) {

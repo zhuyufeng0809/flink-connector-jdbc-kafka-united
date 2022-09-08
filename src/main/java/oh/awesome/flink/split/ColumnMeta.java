@@ -1,16 +1,20 @@
 package oh.awesome.flink.split;
 
+import com.google.common.base.Objects;
+
 import java.io.Serializable;
 
 public class ColumnMeta implements Serializable {
     private final String schemaName;
     private final String tableName;
-    private final String columnName;
+    private final String splitColumnName;
+    private final String[] fieldNames;
 
-    public ColumnMeta(String schemaName, String tableName, String columnName) {
+    public ColumnMeta(String schemaName, String tableName, String splitColumnName, String[] fieldNames) {
         this.schemaName = schemaName;
         this.tableName = tableName;
-        this.columnName = columnName;
+        this.splitColumnName = splitColumnName;
+        this.fieldNames = fieldNames;
     }
 
     public String getSchemaName() {
@@ -21,8 +25,12 @@ public class ColumnMeta implements Serializable {
         return tableName;
     }
 
-    public String getColumnName() {
-        return columnName;
+    public String getSplitColumnName() {
+        return splitColumnName;
+    }
+
+    public String[] getFieldNames() {
+        return fieldNames;
     }
 
     @Override
@@ -34,16 +42,11 @@ public class ColumnMeta implements Serializable {
             return false;
         }
         ColumnMeta that = (ColumnMeta) o;
-        return com.google.common.base.Objects.equal(schemaName, that.schemaName) && com.google.common.base.Objects.equal(tableName, that.tableName) && com.google.common.base.Objects.equal(columnName, that.columnName);
+        return Objects.equal(schemaName, that.schemaName) && Objects.equal(tableName, that.tableName) && Objects.equal(splitColumnName, that.splitColumnName) && Objects.equal(fieldNames, that.fieldNames);
     }
 
     @Override
     public int hashCode() {
-        return com.google.common.base.Objects.hashCode(schemaName, tableName, columnName);
-    }
-
-    @Override
-    public String toString() {
-        return String.join(".", schemaName, tableName, columnName);
+        return Objects.hashCode(schemaName, tableName, splitColumnName, fieldNames);
     }
 }

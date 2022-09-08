@@ -3,6 +3,10 @@ package oh.awesome.flink;
 import oh.awesome.flink.config.ConfigOptions;
 import oh.awesome.flink.enumerator.MySqlSplitEnumerator;
 import oh.awesome.flink.enumerator.MysqlSplitEnumeratorStateSerializer;
+import oh.awesome.flink.reader.MysqlRecordEmitter;
+import oh.awesome.flink.reader.MysqlSourceReader;
+import oh.awesome.flink.reader.MysqlSplitFetcherManager;
+import oh.awesome.flink.reader.MysqlSplitReaderFactory;
 import oh.awesome.flink.split.MySqlSplitSerializer;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.connector.source.Boundedness;
@@ -12,6 +16,8 @@ import org.apache.flink.api.connector.source.SourceReaderContext;
 import org.apache.flink.api.connector.source.SplitEnumerator;
 import org.apache.flink.api.connector.source.SplitEnumeratorContext;
 import org.apache.flink.api.java.typeutils.ResultTypeQueryable;
+import org.apache.flink.connector.base.source.reader.RecordsWithSplitIds;
+import org.apache.flink.connector.base.source.reader.synchronization.FutureCompletingBlockingQueue;
 import org.apache.flink.core.io.SimpleVersionedSerializer;
 import org.apache.flink.table.data.RowData;
 
@@ -39,14 +45,26 @@ public class MysqlSnapshotSource implements Source<RowData, MySqlSplit, MysqlSpl
 
     @Override
     public SourceReader<RowData, MySqlSplit> createReader(SourceReaderContext readerContext) throws Exception {
-        return null;
+        FutureCompletingBlockingQueue<RecordsWithSplitIds<RowData>> elementsQueue =
+                new FutureCompletingBlockingQueue<>(Integer.parseInt(ConfigOptions.SOURCE_READER_QUEUE_CAPACITY));
+        MysqlSplitReaderFactory mysqlSplitReaderFactory = new MysqlSplitReaderFactory(copyProperties());
+        MysqlSplitFetcherManager mysqlSplitFetcherManager = new MysqlSplitFetcherManager(
+                elementsQueue,
+                mysqlSplitReaderFactory
+        );
+        return new MysqlSourceReader(
+                elementsQueue,
+                mysqlSplitFetcherManager,
+                new MysqlRecordEmitter(),
+                null,
+                readerContext,
+                mysqlSplitReaderFactory.getConnection()
+        );
     }
 
     @Override
     public SplitEnumerator<MySqlSplit, MysqlSplitEnumeratorState> createEnumerator(SplitEnumeratorContext<MySqlSplit> enumContext) throws Exception {
-        Properties properties = new Properties();
-        properties.putAll(config);
-        return new MySqlSplitEnumerator(enumContext, properties);
+        return new MySqlSplitEnumerator(enumContext, copyProperties(), fieldNames);
     }
 
     @Override
@@ -62,6 +80,14 @@ public class MysqlSnapshotSource implements Source<RowData, MySqlSplit, MysqlSpl
     @Override
     public SimpleVersionedSerializer<MysqlSplitEnumeratorState> getEnumeratorCheckpointSerializer() {
         return new MysqlSplitEnumeratorStateSerializer();
+    }
+
+
+
+    private Properties copyProperties() {
+        Properties properties = new Properties();
+        properties.putAll(config);
+        return properties;
     }
 
     @Override

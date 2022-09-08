@@ -3,6 +3,7 @@ package oh.awesome.flink.split;
 import org.apache.flink.api.connector.source.SourceSplit;
 
 import com.google.common.base.Objects;
+import oh.awesome.flink.dialect.MySQLDialect;
 
 public class MySqlSplit implements SourceSplit {
 
@@ -31,6 +32,16 @@ public class MySqlSplit implements SourceSplit {
     @Override
     public String splitId() {
         return getId().toString();
+    }
+
+    public String getSelectSql() {
+        return MySQLDialect.getSelectFromBetweenStatement(
+                columnMeta.getSchemaName(),
+                columnMeta.getTableName(),
+                columnMeta.getFieldNames(),
+                columnMeta.getSplitColumnName(),
+                getRange()
+        );
     }
 
     @Override

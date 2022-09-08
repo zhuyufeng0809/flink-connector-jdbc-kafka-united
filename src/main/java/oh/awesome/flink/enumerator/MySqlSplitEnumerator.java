@@ -32,11 +32,13 @@ public class MySqlSplitEnumerator implements SplitEnumerator<MySqlSplit, MysqlSp
     private final Properties config;
     private final Tuple2<Long, Long> bestValue;
     private Map<Integer, Set<MySqlSplit>> unassignedSplits;
+    private final String[] fieldNames;
 
-    public MySqlSplitEnumerator(SplitEnumeratorContext<MySqlSplit> context, Properties config) throws Exception {
+    public MySqlSplitEnumerator(SplitEnumeratorContext<MySqlSplit> context, Properties config, String[] fieldNames) throws Exception {
         this.context = context;
         this.config = config;
         this.bestValue = fetchSplitColumnBestValue();
+        this.fieldNames = fieldNames;
     }
 
     @Override
@@ -94,7 +96,8 @@ public class MySqlSplitEnumerator implements SplitEnumerator<MySqlSplit, MysqlSp
                     new ColumnMeta(
                             config.getProperty(ConfigOptions.SCHEMA),
                             config.getProperty(ConfigOptions.TABLE),
-                            config.getProperty(ConfigOptions.SPLIT_COLUMN)),
+                            config.getProperty(ConfigOptions.SPLIT_COLUMN),
+                            fieldNames),
                     new Range(start, end), i));
             start = end + 1;
         }
