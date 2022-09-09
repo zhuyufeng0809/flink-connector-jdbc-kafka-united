@@ -72,6 +72,7 @@ public class MySqlSplitEnumerator implements SplitEnumerator<MySqlSplit, MysqlSp
     @Override
     public MysqlSplitEnumeratorState snapshotState(long checkpointId) throws Exception {
         // todo
+        // save unassigned splits to state
         return null;
     }
 

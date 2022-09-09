@@ -37,7 +37,8 @@ public class MysqlSplitReader implements SplitReader<RowData, MySqlSplit> {
         this.finishedSplits = new HashSet<>();
     }
 
-    // The heavier read and conversion logic is implemented here
+    // The heavier read and conversion logic is implemented here,
+    // because this method is allowed to blocking
     @Override
     public RecordsWithSplitIds<RowData> fetch() throws IOException {
         Map<String, Iterator<RowData>> splitRecords = pendingReadSplits.stream()

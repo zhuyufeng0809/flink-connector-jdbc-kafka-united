@@ -47,7 +47,7 @@ public class MysqlSnapshotSource implements Source<RowData, MySqlSplit, MysqlSpl
     public SourceReader<RowData, MySqlSplit> createReader(SourceReaderContext readerContext) throws Exception {
         FutureCompletingBlockingQueue<RecordsWithSplitIds<RowData>> elementsQueue =
                 new FutureCompletingBlockingQueue<>(Integer.parseInt(ConfigOptions.SOURCE_READER_QUEUE_CAPACITY));
-        MysqlSplitReaderFactory mysqlSplitReaderFactory = new MysqlSplitReaderFactory(copyProperties());
+        MysqlSplitReaderFactory mysqlSplitReaderFactory = new MysqlSplitReaderFactory(copyProperties(), fieldNames);
         MysqlSplitFetcherManager mysqlSplitFetcherManager = new MysqlSplitFetcherManager(
                 elementsQueue,
                 mysqlSplitReaderFactory
