@@ -1,13 +1,14 @@
 package oh.awesome.flink.reader;
 
 import org.apache.flink.api.java.tuple.Tuple2;
+import org.apache.flink.configuration.Configuration;
 import org.apache.flink.connector.base.source.reader.RecordsWithSplitIds;
 import org.apache.flink.connector.base.source.reader.fetcher.SplitFetcherManager;
 import org.apache.flink.connector.base.source.reader.splitreader.SplitReader;
 import org.apache.flink.connector.base.source.reader.synchronization.FutureCompletingBlockingQueue;
 import org.apache.flink.table.data.RowData;
 
-import oh.awesome.flink.config.ConfigOptions;
+import oh.awesome.flink.config.MysqlSnapshotSourceOptions;
 import oh.awesome.flink.split.MySqlSplit;
 
 import java.util.ArrayList;
@@ -20,10 +21,12 @@ import java.util.function.Supplier;
 
 public class MysqlSplitFetcherManager extends SplitFetcherManager<RowData, MySqlSplit> {
     public MysqlSplitFetcherManager(FutureCompletingBlockingQueue<RecordsWithSplitIds<RowData>> elementsQueue,
-                                    Supplier<SplitReader<RowData, MySqlSplit>> splitReaderFactory) {
+                                    Supplier<SplitReader<RowData, MySqlSplit>> splitReaderFactory,
+                                    Configuration configuration) {
         super(elementsQueue, splitReaderFactory);
 
-        int SplitFetcherNum = Integer.parseInt(ConfigOptions.SPLIT_FETCHER_NUM);
+        int SplitFetcherNum = configuration.getInteger(MysqlSnapshotSourceOptions.SOURCE_READER_SPLIT_FETCHER_NUM,
+                MysqlSnapshotSourceOptions.SOURCE_READER_SPLIT_FETCHER_NUM.defaultValue());
         for (int i = 0; i < SplitFetcherNum; i++) {
             startFetcher(createSplitFetcher());
         }

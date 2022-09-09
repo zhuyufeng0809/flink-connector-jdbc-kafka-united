@@ -2,7 +2,7 @@ package oh.awesome.flink.dialect;
 
 import oh.awesome.flink.split.Range;
 
-import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class MySQLDialect {
@@ -20,7 +20,7 @@ public class MySQLDialect {
 
     public static String getSelectFromBetweenStatement(String schema,
                                                        String table,
-                                                       String[] selectFields,
+                                                       List<String> selectFields,
                                                        String splitColumn,
                                                        Range range) {
         final String sql = " WHERE %s BETWEEN %s AND %s";
@@ -30,10 +30,9 @@ public class MySQLDialect {
 
     public static String getSelectFromStatement(String schema,
                                                        String table,
-                                                       String[] selectFields) {
+                                                       List<String> selectFields) {
         final String sql = "SELECT %s FROM %s.%s";
-        String selectExpressions =
-                Arrays.stream(selectFields)
+        String selectExpressions = selectFields.stream()
                         .map(MySQLDialect::quoteIdentifier)
                         .collect(Collectors.joining(", "));
         return String.format(sql,

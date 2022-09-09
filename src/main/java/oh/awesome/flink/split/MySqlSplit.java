@@ -17,10 +17,6 @@ public class MySqlSplit implements SourceSplit {
         this.id = id;
     }
 
-    public ColumnMeta getColumnMeta() {
-        return columnMeta;
-    }
-
     public Range getRange() {
         return range;
     }

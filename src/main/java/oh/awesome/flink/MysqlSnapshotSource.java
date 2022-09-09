@@ -1,6 +1,6 @@
 package oh.awesome.flink;
 
-import oh.awesome.flink.config.ConfigOptions;
+import oh.awesome.flink.config.MysqlSnapshotSourceOptions;
 import oh.awesome.flink.enumerator.MySqlSplitEnumerator;
 import oh.awesome.flink.enumerator.MysqlSplitEnumeratorStateSerializer;
 import oh.awesome.flink.reader.MysqlRecordEmitter;
@@ -16,6 +16,7 @@ import org.apache.flink.api.connector.source.SourceReaderContext;
 import org.apache.flink.api.connector.source.SplitEnumerator;
 import org.apache.flink.api.connector.source.SplitEnumeratorContext;
 import org.apache.flink.api.java.typeutils.ResultTypeQueryable;
+import org.apache.flink.configuration.Configuration;
 import org.apache.flink.connector.base.source.reader.RecordsWithSplitIds;
 import org.apache.flink.connector.base.source.reader.synchronization.FutureCompletingBlockingQueue;
 import org.apache.flink.core.io.SimpleVersionedSerializer;
@@ -24,18 +25,16 @@ import org.apache.flink.table.data.RowData;
 import oh.awesome.flink.enumerator.MysqlSplitEnumeratorState;
 import oh.awesome.flink.split.MySqlSplit;
 
-import java.util.Properties;
+import java.util.List;
 
 /**
  * only for snapshot reading in hybrid source
  */
 public class MysqlSnapshotSource implements Source<RowData, MySqlSplit, MysqlSplitEnumeratorState>, ResultTypeQueryable<RowData> {
-    private final Properties config;
-    private final String[] fieldNames;
+    private final Configuration configuration;
 
-    private MysqlSnapshotSource(Properties config, String[] fieldNames) {
-        this.config = config;
-        this.fieldNames = fieldNames;
+    public MysqlSnapshotSource(Configuration configuration) {
+        this.configuration = configuration;
     }
 
     @Override
@@ -46,17 +45,18 @@ public class MysqlSnapshotSource implements Source<RowData, MySqlSplit, MysqlSpl
     @Override
     public SourceReader<RowData, MySqlSplit> createReader(SourceReaderContext readerContext) throws Exception {
         FutureCompletingBlockingQueue<RecordsWithSplitIds<RowData>> elementsQueue =
-                new FutureCompletingBlockingQueue<>(Integer.parseInt(ConfigOptions.SOURCE_READER_QUEUE_CAPACITY));
-        MysqlSplitReaderFactory mysqlSplitReaderFactory = new MysqlSplitReaderFactory(copyProperties(), fieldNames);
+                new FutureCompletingBlockingQueue<>(configuration.getInteger(MysqlSnapshotSourceOptions.SOURCE_READER_QUEUE_CAPACITY));
+        MysqlSplitReaderFactory mysqlSplitReaderFactory = new MysqlSplitReaderFactory(configuration.clone());
         MysqlSplitFetcherManager mysqlSplitFetcherManager = new MysqlSplitFetcherManager(
                 elementsQueue,
-                mysqlSplitReaderFactory
+                mysqlSplitReaderFactory,
+                configuration.clone()
         );
         return new MysqlSourceReader(
                 elementsQueue,
                 mysqlSplitFetcherManager,
                 new MysqlRecordEmitter(),
-                null,
+                configuration.clone(),
                 readerContext,
                 mysqlSplitReaderFactory.getConnection()
         );
@@ -64,7 +64,7 @@ public class MysqlSnapshotSource implements Source<RowData, MySqlSplit, MysqlSpl
 
     @Override
     public SplitEnumerator<MySqlSplit, MysqlSplitEnumeratorState> createEnumerator(SplitEnumeratorContext<MySqlSplit> enumContext) throws Exception {
-        return new MySqlSplitEnumerator(enumContext, copyProperties(), fieldNames);
+        return new MySqlSplitEnumerator(enumContext, configuration.clone());
     }
 
     @Override
@@ -82,14 +82,6 @@ public class MysqlSnapshotSource implements Source<RowData, MySqlSplit, MysqlSpl
         return new MysqlSplitEnumeratorStateSerializer();
     }
 
-
-
-    private Properties copyProperties() {
-        Properties properties = new Properties();
-        properties.putAll(config);
-        return properties;
-    }
-
     @Override
     public TypeInformation<RowData> getProducedType() {
         return null;
@@ -100,63 +92,69 @@ public class MysqlSnapshotSource implements Source<RowData, MySqlSplit, MysqlSpl
     }
 
     public static class MysqlSnapshotSourceBuilder {
-        private final Properties properties;
-        private String[] fieldNames;
+        private final Configuration configuration;
 
         public MysqlSnapshotSourceBuilder() {
-            this.properties = new Properties();
+            this.configuration = new Configuration();
         }
 
         public MysqlSnapshotSourceBuilder host(String host) {
-            properties.setProperty(ConfigOptions.HOST, host);
+            configuration.setString(MysqlSnapshotSourceOptions.HOST, host);
             return this;
         }
 
         public MysqlSnapshotSourceBuilder port(Integer port) {
-            properties.setProperty(ConfigOptions.PORT, port.toString());
+            configuration.setInteger(MysqlSnapshotSourceOptions.PORT, port);
             return this;
         }
 
         public MysqlSnapshotSourceBuilder username(String username) {
-            properties.setProperty(ConfigOptions.USERNAME, username);
+            configuration.setString(MysqlSnapshotSourceOptions.USERNAME, username);
             return this;
         }
 
         public MysqlSnapshotSourceBuilder password(String password) {
-            properties.setProperty(ConfigOptions.PASSWORD, password);
+            configuration.setString(MysqlSnapshotSourceOptions.PASSWORD, password);
             return this;
         }
 
         public MysqlSnapshotSourceBuilder schema(String schema) {
-            properties.setProperty(ConfigOptions.SCHEMA, schema);
+            configuration.setString(MysqlSnapshotSourceOptions.SCHEMA_NAME, schema);
             return this;
         }
 
         public MysqlSnapshotSourceBuilder table(String table) {
-            properties.setProperty(ConfigOptions.TABLE, table);
+            configuration.setString(MysqlSnapshotSourceOptions.TABLE_NAME, table);
             return this;
         }
 
         public MysqlSnapshotSourceBuilder splitColumn(String splitColumn) {
-            properties.setProperty(ConfigOptions.SPLIT_COLUMN, splitColumn);
+            configuration.setString(MysqlSnapshotSourceOptions.SPLIT_COLUMN, splitColumn);
             return this;
         }
 
         public MysqlSnapshotSourceBuilder splitNum(Integer splitNum) {
-            properties.setProperty(ConfigOptions.SPLIT_NUM, splitNum.toString());
+            configuration.setInteger(MysqlSnapshotSourceOptions.SPLIT_NUM, splitNum);
             return this;
         }
 
-        public MysqlSnapshotSourceBuilder project(String[] fieldNames) {
-            this.fieldNames = fieldNames;
+        public MysqlSnapshotSourceBuilder sourceReaderQueueCapacity(Integer sourceReaderQueueCapacity) {
+            configuration.setInteger(MysqlSnapshotSourceOptions.SOURCE_READER_QUEUE_CAPACITY, sourceReaderQueueCapacity);
+            return this;
+        }
+
+        public MysqlSnapshotSourceBuilder splitFetcherNum(Integer splitFetcherNum) {
+            configuration.setInteger(MysqlSnapshotSourceOptions.SOURCE_READER_SPLIT_FETCHER_NUM, splitFetcherNum);
+            return this;
+        }
+
+        public MysqlSnapshotSourceBuilder project(List<String> fieldNames) {
+            configuration.set(MysqlSnapshotSourceOptions.SOURCE_READER_PROJECT_COLUMNS, fieldNames);
             return this;
         }
 
         public MysqlSnapshotSource build() {
-            if (fieldNames == null) {
-                fieldNames = new String[]{"*"};
-            }
-            return new MysqlSnapshotSource(properties, fieldNames);
+            return new MysqlSnapshotSource(configuration);
         }
     }
 }

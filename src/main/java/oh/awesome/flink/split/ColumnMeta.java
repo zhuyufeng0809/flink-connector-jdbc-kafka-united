@@ -3,14 +3,15 @@ package oh.awesome.flink.split;
 import com.google.common.base.Objects;
 
 import java.io.Serializable;
+import java.util.List;
 
 public class ColumnMeta implements Serializable {
     private final String schemaName;
     private final String tableName;
     private final String splitColumnName;
-    private final String[] fieldNames;
+    private final List<String> fieldNames;
 
-    public ColumnMeta(String schemaName, String tableName, String splitColumnName, String[] fieldNames) {
+    public ColumnMeta(String schemaName, String tableName, String splitColumnName, List<String> fieldNames) {
         this.schemaName = schemaName;
         this.tableName = tableName;
         this.splitColumnName = splitColumnName;
@@ -29,7 +30,7 @@ public class ColumnMeta implements Serializable {
         return splitColumnName;
     }
 
-    public String[] getFieldNames() {
+    public List<String> getFieldNames() {
         return fieldNames;
     }
 

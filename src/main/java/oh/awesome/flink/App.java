@@ -11,6 +11,8 @@ public class App {
                 .password("")
                 .splitColumn("")
                 .splitNum(64)
+                .sourceReaderQueueCapacity(32)
+                .splitFetcherNum(16)
                 .build();
     }
 }

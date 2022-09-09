@@ -4,9 +4,10 @@ import org.apache.flink.api.connector.source.SplitEnumerator;
 import org.apache.flink.api.connector.source.SplitEnumeratorContext;
 import org.apache.flink.api.connector.source.SplitsAssignment;
 import org.apache.flink.api.java.tuple.Tuple2;
+import org.apache.flink.configuration.Configuration;
 import org.apache.flink.util.Preconditions;
 
-import oh.awesome.flink.config.ConfigOptions;
+import oh.awesome.flink.config.MysqlSnapshotSourceOptions;
 import oh.awesome.flink.dialect.MySQLDialect;
 import oh.awesome.flink.split.ColumnMeta;
 import oh.awesome.flink.split.MySqlSplit;
@@ -23,27 +24,25 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 public class MySqlSplitEnumerator implements SplitEnumerator<MySqlSplit, MysqlSplitEnumeratorState> {
     private final SplitEnumeratorContext<MySqlSplit> context;
-    private final Properties config;
+    private final Configuration configuration;
     private final Tuple2<Long, Long> bestValue;
     private Map<Integer, Set<MySqlSplit>> unassignedSplits;
-    private final String[] fieldNames;
 
-    public MySqlSplitEnumerator(SplitEnumeratorContext<MySqlSplit> context, Properties config, String[] fieldNames) throws Exception {
+    public MySqlSplitEnumerator(SplitEnumeratorContext<MySqlSplit> context, Configuration configuration) throws Exception {
         this.context = context;
-        this.config = config;
+        this.configuration = configuration;
         this.bestValue = fetchSplitColumnBestValue();
-        this.fieldNames = fieldNames;
     }
 
     @Override
     public void start() {
-        List<MySqlSplit> allSplits = calculateAndDerivedSplits(bestValue.f0, bestValue.f1, Integer.parseInt(config.getProperty(ConfigOptions.SPLIT_NUM)));
+        List<MySqlSplit> allSplits = calculateAndDerivedSplits(bestValue.f0, bestValue.f1,
+                configuration.getInteger(MysqlSnapshotSourceOptions.SPLIT_NUM, MysqlSnapshotSourceOptions.SPLIT_NUM.defaultValue()));
         unassignedSplits = allSplits.stream()
                 .collect(Collectors.groupingBy(
                         split -> split.getId() % context.currentParallelism(),
@@ -95,10 +94,12 @@ public class MySqlSplitEnumerator implements SplitEnumerator<MySqlSplit, MysqlSp
             long end = start + splitSize - 1 - (i >= bigBatchNum ? 1 : 0);
             splits.add(new MySqlSplit(
                     new ColumnMeta(
-                            config.getProperty(ConfigOptions.SCHEMA),
-                            config.getProperty(ConfigOptions.TABLE),
-                            config.getProperty(ConfigOptions.SPLIT_COLUMN),
-                            fieldNames),
+                            configuration.getString(MysqlSnapshotSourceOptions.SCHEMA_NAME),
+                            configuration.getString(MysqlSnapshotSourceOptions.TABLE_NAME),
+                            configuration.getString(MysqlSnapshotSourceOptions.SPLIT_COLUMN),
+                            configuration.getOptional(MysqlSnapshotSourceOptions.SOURCE_READER_PROJECT_COLUMNS)
+                                    .orElse(MysqlSnapshotSourceOptions.SOURCE_READER_PROJECT_COLUMNS.defaultValue())
+                    ),
                     new Range(start, end), i));
             start = end + 1;
         }
@@ -108,17 +109,17 @@ public class MySqlSplitEnumerator implements SplitEnumerator<MySqlSplit, MysqlSp
 
     private Tuple2<Long, Long> fetchSplitColumnBestValue() throws Exception {
         Connection connection = DriverManager.getConnection(
-                config.getProperty(ConfigOptions.HOST),
-                config.getProperty(ConfigOptions.USERNAME),
-                config.getProperty(ConfigOptions.PASSWORD));
+                configuration.getString(MysqlSnapshotSourceOptions.HOST),
+                configuration.getString(MysqlSnapshotSourceOptions.USERNAME),
+                configuration.getString(MysqlSnapshotSourceOptions.PASSWORD));
 
         Statement statement = connection.createStatement();
 
         ResultSet resultSet = statement.executeQuery(
                 MySQLDialect.getSelectBestValueStatement(
-                config.getProperty(ConfigOptions.SCHEMA),
-                config.getProperty(ConfigOptions.TABLE),
-                config.getProperty(ConfigOptions.SPLIT_COLUMN))
+                        configuration.getString(MysqlSnapshotSourceOptions.SCHEMA_NAME),
+                        configuration.getString(MysqlSnapshotSourceOptions.TABLE_NAME),
+                        configuration.getString(MysqlSnapshotSourceOptions.SPLIT_COLUMN))
         );
 
         resultSet.next();
