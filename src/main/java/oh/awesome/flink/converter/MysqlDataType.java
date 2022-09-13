@@ -28,6 +28,7 @@ public class MysqlDataType {
     private final static String MYSQL_TEXT = "TEXT";
     private final static String MYSQL_BINARY = "BINARY";
     private final static String MYSQL_VARBINARY = "VARBINARY";
+    private final static String LONGTEXT = "LONGTEXT";
     private final static String MYSQL_BLOB = "BLOB";
     //support PolarDb Mysql type 'BIT'
     private final static String MYSQL_BIT = "BIT";
@@ -81,6 +82,7 @@ public class MysqlDataType {
             case MYSQL_TEXT:
                 //type 'BIT' reference PolarDb Mysql official website
                 //https://help.aliyun.com/document_detail/131282.htm?spm=a2c4g.11186623.0.0.4f86739cjdzqAQ#concept-1813784
+            case LONGTEXT:
             case MYSQL_BIT:
                 return DataTypes.STRING();
             case MYSQL_BINARY:

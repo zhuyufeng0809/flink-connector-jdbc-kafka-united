@@ -92,7 +92,7 @@ public class MySqlSplitEnumerator implements SplitEnumerator<MySqlSplit, MysqlSp
 
         long start = minValue;
         List<MySqlSplit> splits = new ArrayList<>();
-        for (int i = 0; i < minValue; i++) {
+        for (int i = 0; i < actualSplitsNum; i++) {
             long end = start + splitSize - 1 - (i >= bigBatchNum ? 1 : 0);
             splits.add(new MySqlSplit(
                     new ColumnMeta(
