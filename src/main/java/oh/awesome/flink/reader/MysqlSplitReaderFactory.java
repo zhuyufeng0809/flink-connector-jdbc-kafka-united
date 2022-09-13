@@ -38,7 +38,7 @@ public class MysqlSplitReaderFactory implements Supplier<SplitReader<RowData, My
 
         DataTypes.Field[] fields = new DataTypes.Field[resultSetMetaData.getColumnCount()];
         for (int i = 1; i <= resultSetMetaData.getColumnCount(); i++) {
-            fields[i] = DataTypes.FIELD(resultSetMetaData.getColumnName(i), MysqlDataType.fromJDBCType(resultSetMetaData, i));
+            fields[i - 1] = DataTypes.FIELD(resultSetMetaData.getColumnName(i), MysqlDataType.fromJDBCType(resultSetMetaData, i));
         }
 
         final RowType rowType = (RowType) DataTypes.ROW(fields).notNull().getLogicalType();

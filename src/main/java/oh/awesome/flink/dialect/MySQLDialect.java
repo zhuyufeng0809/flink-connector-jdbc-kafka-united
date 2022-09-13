@@ -24,7 +24,7 @@ public class MySQLDialect {
                                                        String splitColumn,
                                                        Range range) {
         final String sql = " WHERE %s BETWEEN %s AND %s";
-        String between = String.format(sql, quoteIdentifier(splitColumn), range.getLowerBound(), range.getLowerBound());
+        String between = String.format(sql, quoteIdentifier(splitColumn), range.getLowerBound(), range.getUpperBound());
         return String.join("", getSelectFromStatement(schema, table, selectFields), between);
     }
 

@@ -7,9 +7,12 @@ import oh.awesome.flink.dialect.MySQLDialect;
 
 public class MySqlSplit implements SourceSplit {
 
-    private final ColumnMeta columnMeta;
-    private final Range range;
-    private final Integer id;
+    private ColumnMeta columnMeta;
+    private Range range;
+    private Integer id;
+
+    public MySqlSplit() {
+    }
 
     public MySqlSplit(ColumnMeta columnMeta, Range range, Integer id) {
         this.columnMeta = columnMeta;

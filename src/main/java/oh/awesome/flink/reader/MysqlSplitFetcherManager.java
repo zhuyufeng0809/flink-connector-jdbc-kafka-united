@@ -20,22 +20,22 @@ import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
 public class MysqlSplitFetcherManager extends SplitFetcherManager<RowData, MySqlSplit> {
+    private final Integer splitFetcherNum;
     public MysqlSplitFetcherManager(FutureCompletingBlockingQueue<RecordsWithSplitIds<RowData>> elementsQueue,
                                     Supplier<SplitReader<RowData, MySqlSplit>> splitReaderFactory,
                                     Configuration configuration) {
         super(elementsQueue, splitReaderFactory);
-
-        int SplitFetcherNum = configuration.getInteger(MysqlSnapshotSourceOptions.SOURCE_READER_SPLIT_FETCHER_NUM,
+        this.splitFetcherNum = configuration.getInteger(MysqlSnapshotSourceOptions.SOURCE_READER_SPLIT_FETCHER_NUM,
                 MysqlSnapshotSourceOptions.SOURCE_READER_SPLIT_FETCHER_NUM.defaultValue());
-        for (int i = 0; i < SplitFetcherNum; i++) {
-            startFetcher(createSplitFetcher());
-        }
     }
 
     @Override
     public void addSplits(List<MySqlSplit> splitsToAdd) {
-        final Iterator<Integer>[] iterator = new Iterator[]{fetchers.keySet().iterator()};
+        while (getNumAliveFetchers() < splitFetcherNum) {
+            startFetcher(createSplitFetcher());
+        }
 
+        final Iterator<Integer>[] iterator = new Iterator[]{fetchers.keySet().iterator()};
         splitsToAdd.stream()
                 .map(split -> {
                     if (!iterator[0].hasNext()) {

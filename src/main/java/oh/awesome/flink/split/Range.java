@@ -3,8 +3,11 @@ package oh.awesome.flink.split;
 import com.google.common.base.Objects;
 
 public class Range {
-    private final Long lowerBound;
-    private final Long upperBound;
+    private Long lowerBound;
+    private Long upperBound;
+
+    public Range() {
+    }
 
     public Range(Long lowerBound, Long upperBound) {
         this.lowerBound = lowerBound;

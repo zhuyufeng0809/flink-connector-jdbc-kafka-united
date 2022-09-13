@@ -62,9 +62,11 @@ public class MySqlSplitEnumerator implements SplitEnumerator<MySqlSplit, MysqlSp
     @Override
     public void addReader(int subtaskId) {
         Set<MySqlSplit> splits = unassignedSplits.remove(subtaskId);
-        Map<Integer, List<MySqlSplit>> assignedSplits = new HashMap<>();
-        assignedSplits.put(subtaskId, new ArrayList<>(splits));
-        context.assignSplits(new SplitsAssignment<>(assignedSplits));
+        if (splits != null) {
+            Map<Integer, List<MySqlSplit>> assignedSplits = new HashMap<>();
+            assignedSplits.put(subtaskId, new ArrayList<>(splits));
+            context.assignSplits(new SplitsAssignment<>(assignedSplits));
+        }
         context.signalNoMoreSplits(subtaskId);
     }
 

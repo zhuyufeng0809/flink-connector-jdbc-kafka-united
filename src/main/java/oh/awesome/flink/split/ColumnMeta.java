@@ -3,19 +3,25 @@ package oh.awesome.flink.split;
 import com.google.common.base.Objects;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.List;
 
 public class ColumnMeta implements Serializable {
-    private final String schemaName;
-    private final String tableName;
-    private final String splitColumnName;
-    private final List<String> fieldNames;
+    private String schemaName;
+    private String tableName;
+    private String splitColumnName;
+    // for kryo serialization reason:
+    // Class cannot be created (missing no-arg constructor):java.util.Arrays$ArrayList
+    private String[] fieldNames;
+
+    public ColumnMeta() {
+    }
 
     public ColumnMeta(String schemaName, String tableName, String splitColumnName, List<String> fieldNames) {
         this.schemaName = schemaName;
         this.tableName = tableName;
         this.splitColumnName = splitColumnName;
-        this.fieldNames = fieldNames;
+        this.fieldNames = (String[]) fieldNames.toArray();
     }
 
     public String getSchemaName() {
@@ -31,7 +37,7 @@ public class ColumnMeta implements Serializable {
     }
 
     public List<String> getFieldNames() {
-        return fieldNames;
+        return Arrays.asList(fieldNames.clone());
     }
 
     @Override
